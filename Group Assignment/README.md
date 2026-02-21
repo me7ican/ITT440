@@ -41,11 +41,8 @@ Run:
 docker exec -it itt440_db mysql -uroot -prootpass -e "SELECT * FROM itt440.scoreboard;"
 ```
 
-You should see both users and points increasing over time.
-
 ## Ports
 - C server: `localhost:5001`
 - Python server: `localhost:5002`
 - MySQL: `localhost:3306`
 
-> Note: If your lecturer wants different port numbers, change them in `docker-compose.yml`.
