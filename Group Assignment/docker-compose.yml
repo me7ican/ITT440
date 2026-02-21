@@ -1,0 +1,83 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: itt440_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - itt440net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootpass"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  server_c:
+    build: ./server_c
+    container_name: itt440_server_c
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASS: rootpass
+      DB_NAME: itt440
+      SCORE_USER: c_user
+      LISTEN_PORT: "5001"
+      UPDATE_SECONDS: "30"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    networks:
+      - itt440net
+
+  server_py:
+    build: ./server_py
+    container_name: itt440_server_py
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASS: rootpass
+      DB_NAME: itt440
+      SCORE_USER: py_user
+      LISTEN_PORT: "5002"
+      UPDATE_SECONDS: "30"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5002:5002"
+    networks:
+      - itt440net
+
+  client_c:
+    build: ./client_c
+    container_name: itt440_client_c
+    environment:
+      SERVER_HOST: server_c
+      SERVER_PORT: "5001"
+    depends_on:
+      - server_c
+    networks:
+      - itt440net
+
+  client_py:
+    build: ./client_py
+    container_name: itt440_client_py
+    environment:
+      SERVER_HOST: server_py
+      SERVER_PORT: "5002"
+    depends_on:
+      - server_py
+    networks:
+      - itt440net
+
+networks:
+  itt440net:
+    driver: bridge
